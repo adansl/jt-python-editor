@@ -10,7 +10,7 @@ class PixelArtEditor:
     def __init__(self):
         pygame.init()
         self.screen_width = 1500
-        self.screen_height = 700
+        self.screen_height = 1200
         
         # Add RESIZABLE flag to the display mode
         self.screen = pygame.display.set_mode(
@@ -117,14 +117,13 @@ class PixelArtEditor:
         self.canvas_rect = pygame.Rect(20, 20,
                                     self.canvas_width * self.pixel_size,
                                     self.canvas_height * self.pixel_size)
-        
         # UI Controls
         button_width = 100
         button_height = 30
         dropdown_width = 120
         dropdown_height = 30
         
-         # Define button_y BEFORE using it
+        # Define button_y BEFORE using it
         button_y = 180  # Adjusted starting position
         
         # Format dropdown (restored)
@@ -176,13 +175,12 @@ class PixelArtEditor:
         )
         
         button_y += 40
-        
         self.toggle_animation_mode_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
                                     (button_width, button_height)),
             text="Toggle Animation",
             manager=self.manager
-)
+        )
         
         # Paint bucket button
         self.paint_bucket_button = pygame_gui.elements.UIButton(
@@ -191,8 +189,8 @@ class PixelArtEditor:
             text="Fill All",
             manager=self.manager
         )
-        button_y += 40
         
+        button_y += 40
         # Right mouse paint bucket button
         self.rmb_paint_bucket_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
@@ -200,8 +198,8 @@ class PixelArtEditor:
             text="Fill RMB",
             manager=self.manager
         )
-        button_y += 40
         
+        button_y += 40
         # Add swap button (moved up in the UI order)
         self.swap_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
@@ -210,8 +208,8 @@ class PixelArtEditor:
             manager=self.manager
         )
         print("Swap button created at position:", self.canvas_rect.right + 20, button_y)  # Debug output
-        button_y += 40
         
+        button_y += 40
         # Load button
         self.load_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
@@ -219,18 +217,18 @@ class PixelArtEditor:
             text="Load",
             manager=self.manager
         )
-        button_y += 40
         
-          # Save button
+        button_y += 40
+        # Save button
         self.save_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
                                     (button_width, button_height)),
             text="Save",
             manager=self.manager
         )
-        button_y += 40
         
-       # Add filename input field with better positioning
+        button_y += 40
+        # Add filename input field with better positioning
         button_y += 40
         self.filename_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
@@ -238,7 +236,7 @@ class PixelArtEditor:
             text="Filename:",
             manager=self.manager
         )
-
+        
         button_y += 30
         self.filename_input = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
@@ -246,24 +244,84 @@ class PixelArtEditor:
             manager=self.manager
         )
         self.filename_input.set_text("image")  # Default filename
-
+        
         # Add more space after the filename input
         button_y += 50
         
+        # Add text input label
+        self.text_input_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (button_width, button_height)),
+            text="Text to Draw:",
+            manager=self.manager
+        )
+        
+        button_y += 30
+        # Add text input field
+        self.text_input = pygame_gui.elements.UITextEntryLine(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (button_width + 50, button_height)),
+            manager=self.manager
+        )
+        
+        # Add font size control
+        button_y += 40
+        self.font_size_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (button_width, button_height)),
+            text="Font Size:",
+            manager=self.manager
+        )
+        
+        button_y += 30
+        self.font_size_slider = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (dropdown_width, 20)),
+            start_value=8,
+            value_range=(6, 14),
+            manager=self.manager
+        )
+        
+        # Add letter spacing control
+        button_y += 40
+        self.letter_spacing_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (button_width, button_height)),
+            text="Letter Spacing:",
+            manager=self.manager
+        )
+        
+        button_y += 30
+        self.letter_spacing_slider = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (dropdown_width, 20)),
+            start_value=1,
+            value_range=(0, 5),
+            manager=self.manager
+        )
+        
+        # Add draw text button
+        button_y += 40
+        self.draw_text_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (button_width, button_height)),
+            text="Draw Text",
+            manager=self.manager
+        )
+        
         # Animation controls (initially hidden)
         animation_controls_y = self.canvas_rect.bottom + 10
-
         # Make sure animation controls are within the visible screen area
         if animation_controls_y + 100 > self.screen_height:
             animation_controls_y = self.screen_height - 150
-
+        
         self.animation_controls_rect = pygame.Rect(20, animation_controls_y,
                                                 self.canvas_rect.width, 40)
         
         # Back button
         self.back_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left, self.animation_controls_rect.top),
-                                     (40, 40)),
+                                    (40, 40)),
             text="<",
             manager=self.manager
         )
@@ -271,7 +329,7 @@ class PixelArtEditor:
         # Play/Pause button
         self.play_pause_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 50, self.animation_controls_rect.top),
-                                     (40, 40)),
+                                    (40, 40)),
             text="PLAY",
             manager=self.manager
         )
@@ -279,7 +337,7 @@ class PixelArtEditor:
         # Forward button
         self.forward_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 100, self.animation_controls_rect.top),
-                                     (40, 40)),
+                                    (40, 40)),
             text=">",
             manager=self.manager
         )
@@ -287,7 +345,7 @@ class PixelArtEditor:
         # Plus button (add frame)
         self.plus_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 150, self.animation_controls_rect.top),
-                                     (40, 40)),
+                                    (40, 40)),
             text="+",
             manager=self.manager
         )
@@ -295,7 +353,7 @@ class PixelArtEditor:
         # Minus button (delete frame)
         self.minus_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 200, self.animation_controls_rect.top),
-                                     (40, 40)),
+                                    (40, 40)),
             text="-",
             manager=self.manager
         )
@@ -303,7 +361,7 @@ class PixelArtEditor:
         # Clone frame button
         self.clone_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 250, self.animation_controls_rect.top),
-                                     (40, 40)),
+                                    (40, 40)),
             text="CP",
             manager=self.manager
         )
@@ -311,12 +369,12 @@ class PixelArtEditor:
         # Directional buttons
         self.up_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300, self.animation_controls_rect.top),
-                                     (40, 40)),
+                                    (40, 40)),
             text="UP",
             manager=self.manager
         )
         
-            # Status message display
+        # Status message display
         self.status_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((20, self.screen_height - 40),
                                     (self.screen_width - 40, 30)),
@@ -326,21 +384,21 @@ class PixelArtEditor:
         
         self.left_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300 - 50, self.animation_controls_rect.top + 50),
-                                     (40, 40)),
+                                    (40, 40)),
             text="LEFT",
             manager=self.manager
         )
         
         self.down_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300, self.animation_controls_rect.top + 50),
-                                     (40, 40)),
+                                    (40, 40)),
             text="DOWN",
             manager=self.manager
         )
         
         self.right_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300 + 50, self.animation_controls_rect.top + 50),
-                                     (40, 40)),
+                                    (40, 40)),
             text="RIGHT",
             manager=self.manager
         )
@@ -348,14 +406,14 @@ class PixelArtEditor:
         # Delay input for animation
         self.delay_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 400, self.animation_controls_rect.top),
-                                     (50, 40)),
+                                    (50, 40)),
             text="Delay:",
             manager=self.manager
         )
         
         self.delay_input = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 450, self.animation_controls_rect.top),
-                                     (50, 40)),
+                                    (50, 40)),
             manager=self.manager
         )
         self.delay_input.set_text(str(self.delays))
@@ -363,7 +421,7 @@ class PixelArtEditor:
         # Frame counter
         self.frame_counter = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 510, self.animation_controls_rect.top),
-                                     (100, 40)),
+                                    (100, 40)),
             text="Frame: 1/1",
             manager=self.manager
         )
@@ -380,6 +438,92 @@ class PixelArtEditor:
         # Set visibility of animation controls based on mode
         self.update_animation_controls_visibility()
         
+    def draw_text_on_canvas(self):
+        # Get the text from the input field
+        text = self.text_input.get_text()
+        if not text:
+            self.status_label.set_text("Please enter text to draw")
+            return
+        
+        print(f"Drawing text: '{text}'")  # Debug output
+        
+        # Get font size and letter spacing
+        try:
+            font_size = int(self.font_size_slider.get_current_value())
+        except:
+            font_size = 8
+        
+        try:
+            letter_spacing = int(self.letter_spacing_slider.get_current_value())
+        except:
+            letter_spacing = 1
+        
+        # Use pygame's font rendering directly
+        pygame.font.init()
+        
+        # Try to load a font
+        try:
+            font = pygame.font.SysFont("Arial", font_size)
+            print("Using Arial font")
+        except:
+            try:
+                font = pygame.font.SysFont("Courier", font_size)
+                print("Using Courier font")
+            except:
+                font = pygame.font.Font(None, font_size)
+                print("Using default font")
+        
+        # Render the text to a surface
+        text_surface = font.render(text, True, (255, 255, 255), (0, 0, 0))
+        
+        # Calculate position to center the text
+        position = ((self.canvas_width - text_surface.get_width()) // 2, 
+                    (self.canvas_height - text_surface.get_height()) // 2)
+        
+        # Ensure position is not negative
+        position = (max(0, position[0]), max(0, position[1]))
+        
+        print(f"Text dimensions: {text_surface.get_width()}x{text_surface.get_height()}")
+        print(f"Text position: {position}")
+        
+        # Create a temporary surface the size of the canvas
+        temp_surface = pygame.Surface((self.canvas_width, self.canvas_height))
+        temp_surface.fill((0, 0, 0))  # Fill with black
+        
+        # Draw the text onto the temporary surface
+        temp_surface.blit(text_surface, position)
+        
+        # Save debug image
+        pygame.image.save(temp_surface, "debug_text_render.png")
+        print("Saved debug image to debug_text_render.png")
+        
+        # Get the current frame
+        current_frame = self.pixel_array_frames[self.current_frame_index]
+        
+        # Count how many pixels we change
+        pixels_changed = 0
+        
+        # Transfer pixels from the surface to the pixel array
+        for y in range(self.canvas_height):
+            for x in range(self.canvas_width):
+                # Check if we're within bounds
+                if x < temp_surface.get_width() and y < temp_surface.get_height():
+                    # Get the pixel color from the pygame surface
+                    pixel_color = temp_surface.get_at((x, y))
+                    
+                    # Check if the pixel is not black (part of the text)
+                    # Use a very low threshold to catch anti-aliased edges
+                    if pixel_color[0] > 20 or pixel_color[1] > 20 or pixel_color[2] > 20:
+                        # Set the pixel in your canvas to the selected color
+                        current_frame[y][x] = self.selected_color
+                        pixels_changed += 1
+        
+        # Update the display
+        self.draw_pixels()
+        self.update_text_display()
+        self.status_label.set_text(f"Drew text: '{text}' ({pixels_changed} pixels)")
+    
+
         
     def swap_black_pixels(self):
             # Debug output
@@ -974,6 +1118,9 @@ class PixelArtEditor:
                     self.shift_image_right()
                 elif event.ui_element == self.save_button:
                     self.save_jt_file()
+                elif event.ui_element == self.draw_text_button:
+                    print("Draw Text button clicked")  # Debug output
+                    self.draw_text_on_canvas()
                 elif event.ui_element == self.debug_toggle_button:
                     self.text_display.visible = not self.text_display.visible
                 elif event.ui_element == self.load_button:
