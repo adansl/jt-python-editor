@@ -461,17 +461,31 @@ class PixelArtEditor:
         # Use pygame's font rendering directly
         pygame.font.init()
         
-        # Try to load a font
+        # Try to load Roboto Light from the TTF file
         try:
-            font = pygame.font.SysFont("Arial", font_size)
-            print("Using Arial font")
-        except:
+            # Try to load Roboto Light from the TTF file in the current directory
+            font = pygame.font.Font("Roboto-Light.ttf", font_size)
+            print("Using Roboto Light font from TTF file")
+        except Exception as e:
+            print(f"Error loading Roboto Light font: {e}")
             try:
-                font = pygame.font.SysFont("Courier", font_size)
-                print("Using Courier font")
+                # Try Roboto Medium as a fallback
+                font = pygame.font.Font("Roboto-Medium.ttf", font_size)
+                print("Using Roboto Medium as fallback")
             except:
-                font = pygame.font.Font(None, font_size)
-                print("Using default font")
+                try:
+                    # Try system Roboto
+                    font = pygame.font.SysFont("Roboto", font_size)
+                    print("Using system Roboto font")
+                except:
+                    try:
+                        # Try Arial as a fallback
+                        font = pygame.font.SysFont("Arial", font_size)
+                        print("Using Arial font (Roboto not available)")
+                    except:
+                        # Last resort - use default font
+                        font = pygame.font.Font(None, font_size)
+                        print("Using default font")
         
         # Render the text to a surface
         text_surface = font.render(text, True, (255, 255, 255), (0, 0, 0))
