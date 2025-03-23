@@ -20,9 +20,12 @@ class PixelArtEditor:
         pygame.display.set_caption("Pixel Art Editor")
         self.clock = pygame.time.Clock()
         
-        # Initialize pygame_gui
-        self.manager = pygame_gui.UIManager((self.screen_width, self.screen_height))
+        self.bg_color = "#2D2D2D"  # Dark gray background
+        # Initialize pygame_gui with the theme
+        self.manager = pygame_gui.UIManager((self.screen_width, self.screen_height), 'theme.json')
         
+        # Set a darker background color for the application
+     
         # Define the color palette with names
         self.color_names = {
             '#000000': 'Black',
@@ -96,6 +99,9 @@ class PixelArtEditor:
         
         # Initialize pixel arrays
         self.initialize_pixel_arrays()
+            
+        # Make sure animation controls visibility is set correctly at startup
+        self.update_animation_controls_visibility()
         
     def initialize_pixel_arrays(self):
         # Create pixel arrays for frames
@@ -117,6 +123,9 @@ class PixelArtEditor:
         button_height = 30
         dropdown_width = 120
         dropdown_height = 30
+        
+         # Define button_y BEFORE using it
+        button_y = 180  # Adjusted starting position
         
         # Format dropdown (restored)
         self.format_dropdown = pygame_gui.elements.UIDropDownMenu(
@@ -157,6 +166,23 @@ class PixelArtEditor:
         
         # Buttons
         button_y = 180  # Adjusted starting position
+        
+        # Debug toggle button (now button_y is defined)
+        self.debug_toggle_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (button_width, button_height)),
+            text="Toggle Debug",
+            manager=self.manager
+        )
+        
+        button_y += 40
+        
+        self.toggle_animation_mode_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
+                                    (button_width, button_height)),
+            text="Toggle Animation",
+            manager=self.manager
+)
         
         # Paint bucket button
         self.paint_bucket_button = pygame_gui.elements.UIButton(
@@ -204,26 +230,35 @@ class PixelArtEditor:
         )
         button_y += 40
         
-        # Add filename input field
+       # Add filename input field with better positioning
+        button_y += 40
         self.filename_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
                                     (button_width, button_height)),
             text="Filename:",
             manager=self.manager
         )
+
         button_y += 30
-        
         self.filename_input = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect((self.canvas_rect.right + 20, button_y),
                                     (button_width + 50, button_height)),
             manager=self.manager
         )
         self.filename_input.set_text("image")  # Default filename
-        button_y += 40
-    
+
+        # Add more space after the filename input
+        button_y += 50
+        
         # Animation controls (initially hidden)
-        self.animation_controls_rect = pygame.Rect(20, self.canvas_rect.bottom + 10,
-                                                 self.canvas_rect.width, 40)
+        animation_controls_y = self.canvas_rect.bottom + 10
+
+        # Make sure animation controls are within the visible screen area
+        if animation_controls_y + 100 > self.screen_height:
+            animation_controls_y = self.screen_height - 150
+
+        self.animation_controls_rect = pygame.Rect(20, animation_controls_y,
+                                                self.canvas_rect.width, 40)
         
         # Back button
         self.back_button = pygame_gui.elements.UIButton(
@@ -237,7 +272,7 @@ class PixelArtEditor:
         self.play_pause_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 50, self.animation_controls_rect.top),
                                      (40, 40)),
-            text="▶",
+            text="PLAY",
             manager=self.manager
         )
         
@@ -269,7 +304,7 @@ class PixelArtEditor:
         self.clone_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 250, self.animation_controls_rect.top),
                                      (40, 40)),
-            text="C",
+            text="CP",
             manager=self.manager
         )
         
@@ -277,7 +312,7 @@ class PixelArtEditor:
         self.up_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300, self.animation_controls_rect.top),
                                      (40, 40)),
-            text="↑",
+            text="UP",
             manager=self.manager
         )
         
@@ -285,28 +320,28 @@ class PixelArtEditor:
         self.status_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((20, self.screen_height - 40),
                                     (self.screen_width - 40, 30)),
-            text="",
+            text="WHAT",
             manager=self.manager
         )
         
         self.left_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300 - 50, self.animation_controls_rect.top + 50),
                                      (40, 40)),
-            text="←",
+            text="LEFT",
             manager=self.manager
         )
         
         self.down_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300, self.animation_controls_rect.top + 50),
                                      (40, 40)),
-            text="↓",
+            text="DOWN",
             manager=self.manager
         )
         
         self.right_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.animation_controls_rect.left + 300 + 50, self.animation_controls_rect.top + 50),
                                      (40, 40)),
-            text="→",
+            text="RIGHT",
             manager=self.manager
         )
         
@@ -333,13 +368,14 @@ class PixelArtEditor:
             manager=self.manager
         )
         
-        # Text display for binary representation
+        # Text display for binary representation (initially hidden)
         self.text_display = pygame_gui.elements.UITextBox(
             relative_rect=pygame.Rect((20, self.animation_controls_rect.bottom + 10),
-                                     (self.screen_width - 40, 150)),
+                                    (self.screen_width - 40, 150)),
             html_text="",
             manager=self.manager
         )
+        self.text_display.visible = False  # Hide by default
         
         # Set visibility of animation controls based on mode
         self.update_animation_controls_visibility()
@@ -380,26 +416,52 @@ class PixelArtEditor:
         # Show/hide animation controls based on current mode
         visible = self.current_mode == "animation"
         
-        self.back_button.visible = visible
-        self.play_pause_button.visible = visible
-        self.forward_button.visible = visible
-        self.plus_button.visible = visible
-        self.minus_button.visible = visible
-        self.clone_button.visible = visible
-        self.up_button.visible = visible
-        self.left_button.visible = visible
-        self.down_button.visible = visible
-        self.right_button.visible = visible
-        self.delay_label.visible = visible
-        self.delay_input.visible = visible
-        self.frame_counter.visible = visible
+        # Print debug info
+        print(f"Setting animation controls visibility to: {visible}")
+        print(f"Current mode is: {self.current_mode}")
+        
+        # Force visibility for all animation controls
+        try:
+            self.back_button.visible = visible
+            self.play_pause_button.visible = visible
+            self.forward_button.visible = visible
+            self.plus_button.visible = visible
+            self.minus_button.visible = visible
+            self.clone_button.visible = visible
+            self.up_button.visible = visible
+            self.left_button.visible = visible
+            self.down_button.visible = visible
+            self.right_button.visible = visible
+            self.delay_label.visible = visible
+            self.delay_input.visible = visible
+            self.frame_counter.visible = visible
+            
+            # Print the visibility state of one control to verify
+            print(f"Back button visibility is now: {self.back_button.visible}")
+        except Exception as e:
+            print(f"Error setting visibility: {e}")
     
     def handle_mode_change(self):
         # Handle mode change (static/animation)
         self.is_playing = False
-        self.current_mode = self.mode_dropdown.selected_option
-        self.update_animation_controls_visibility()
+        pygame.time.set_timer(pygame.USEREVENT, 0)  # Stop any running animation
+        
+        # Extract the mode from the dropdown selection
+        # If it's a tuple, take the first element
+        selected_option = self.mode_dropdown.selected_option
+        if isinstance(selected_option, tuple):
+            self.current_mode = selected_option[0]
+        else:
+            self.current_mode = selected_option
+        
         self.data_type = 0 if self.current_mode == "animation" else 1
+        
+        # Update animation controls visibility
+        self.update_animation_controls_visibility()
+        
+        # Debug output to confirm mode change
+        print(f"Mode changed to: {self.current_mode}")
+        print(f"Animation controls should be: {'visible' if self.current_mode == 'animation' else 'hidden'}")
     
     def handle_paint_bucket(self):
         # Fill all pixels with selected color
@@ -426,7 +488,7 @@ class PixelArtEditor:
         t_txt = f"{self.total_frames:02d}"
         self.frame_counter.set_text(f"Frame: {c_txt}/{t_txt}")
         
-        # Update delay value
+        # Update delay value from input field
         try:
             self.delays = int(self.delay_input.get_text())
         except ValueError:
@@ -457,8 +519,8 @@ class PixelArtEditor:
             '#00FFFF': '110',  # Cyan
             '#FFFFFF': '111'   # White
         }
-        
         current_color = color_map.get(color, '000')
+        # Extract the specific bit at position
         binary_value = current_color[position] if position < len(current_color) else '0'
         return binary_value
 
@@ -568,6 +630,7 @@ class PixelArtEditor:
         self.current_frame_index = self.total_frames - 1  # Set current frame to the newly added frame
         self.update_frame_display()
         self.draw_pixels()
+        self.update_text_display()
 
     def delete_frame(self):
         # Delete the current frame if there's more than one
@@ -649,8 +712,13 @@ class PixelArtEditor:
         self.is_playing = not self.is_playing
         if self.is_playing:
             pygame.time.set_timer(pygame.USEREVENT, self.delays)
+            # Update button text to show pause symbol
+            self.play_pause_button.set_text("Pause")
         else:
-            pygame.time.set_timer(pygame.USEREVENT, 0)  # Stop the timer
+            # Stop the timer
+            pygame.time.set_timer(pygame.USEREVENT, 0)
+            # Update button text to show play symbol
+            self.play_pause_button.set_text("Play")
 
     def next_frame(self):
         # Go to next frame in animation
@@ -667,72 +735,57 @@ class PixelArtEditor:
             self.update_frame_display()
             self.draw_pixels()
             self.update_text_display()
-
+            
     def save_jt_file(self):
         # Save as JT file format
-        if self.selected_format == "v1":
-            # v1 format
-            if self.current_mode == "static":
-                # Static image
-                data = {
-                    "dataType": 1,
-                    "data": {
-                        "pixelHeight": self.canvas_height,
-                        "pixelWidth": self.canvas_width,
-                        "graffitiData": self.get_binary_data_for_jt(is_v1=True)
-                    }
-                }
-            else:
-                # Animation
-                data = {
-                    "dataType": 0,
-                    "data": {
-                        "pixelHeight": self.canvas_height,
-                        "pixelWidth": self.canvas_width,
-                        "frameNum": self.total_frames,
-                        "delays": self.delays,
-                        "aniData": self.get_binary_data_for_jt(True, is_v1=True)
-                    }
-                }
-        else:  # v2 format
-            if self.current_mode == "static":
-                # Static image
-                data = {
-                    "dataType": 1,
-                    "data": {
-                        "pixelHeight": self.canvas_height,
-                        "pixelWidth": self.canvas_width,
-                        "graffitiData": self.get_binary_data_for_jt()
-                    }
-                }
-            else:
-                # Animation
-                data = {
-                    "dataType": 0,
-                    "data": {
-                        "pixelHeight": self.canvas_height,
-                        "pixelWidth": self.canvas_width,
-                        "frameNum": self.total_frames,
-                        "delays": self.delays,
-                        "aniData": self.get_binary_data_for_jt(True)
-                    }
-                }
+        filename = self.filename_input.get_text()
+        if not filename:
+            filename = "image"
+        if not filename.endswith(".jt"):
+            filename += ".jt"
         
-        # Ask for save location
-        file_path = self.show_save_dialog(".jt", "JT Files (*.jt)")
+        # Create the data structure based on format and mode
+        if self.current_mode == "static":
+            # Static image
+            data = [{
+                "dataType": 1,
+                "data": {
+                    "speed": 255,
+                    "mode": 1,
+                    "pixelHeight": self.canvas_height,
+                    "stayTime": 3,
+                    "graffitiData": self.get_binary_data_for_jt(),
+                    "pixelWidth": self.canvas_width,
+                    "graffitiType": 1
+                }
+            }]
+        else:
+            # Animation
+            data = [{
+                "dataType": 0,
+                "data": {
+                    "pixelWidth": self.canvas_width,
+                    "aniData": self.get_binary_data_for_jt(True),
+                    "frameNum": self.total_frames,
+                    "delays": self.delays,
+                    "aniType": 1,
+                    "pixelHeight": self.canvas_height
+                }
+            }]
         
         try:
-            with open(file_path, 'w') as f:
+            with open(filename, 'w') as f:
                 json.dump(data, f)
-            
             # Show a success message
-            print(f"File saved successfully as {file_path}")
+            self.status_label.set_text(f"File saved successfully as {filename}")
+            print(f"File saved successfully as {filename}")
         except Exception as e:
             # Show an error message
+            self.status_label.set_text(f"Error saving file: {e}")
             print(f"Error saving file: {e}")
 
     def get_binary_data_for_jt(self, is_animation=False, is_v1=False):
-    # Convert pixel data to binary format for JT file
+        # Convert pixel data to binary format for JT file
         binary_data = []
         frames_to_process = self.pixel_array_frames if is_animation else [self.pixel_array_frames[self.current_frame_index]]
         
@@ -743,30 +796,35 @@ class PixelArtEditor:
                 for row in range(self.canvas_height):
                     for col in range(self.canvas_width):
                         color = frame[row][col]
-                        binary = self.reverse_color_map.get(color, '000')
+                        binary = self.reverse_color_map.get(color.upper(), '000')
                         # In v1, we store each pixel as a single byte (0-7)
                         # Convert binary string to decimal (0-7)
                         decimal_value = int(binary, 2)
                         frame_data.append(decimal_value)
                 binary_data.extend(frame_data)
         else:
-            # v2 format - original implementation
-            for frame in frames_to_process:
-                red_data = []
-                green_data = []
-                blue_data = []
-                
+            # v2 format - match JavaScript implementation
+            red_data = []
+            green_data = []
+            blue_data = []
+            
+            # Process each frame
+            for frame_idx, frame in enumerate(frames_to_process):
+                # Process each column
                 for col in range(self.canvas_width):
+                    # Process each group of 8 rows (or less for the last group)
                     for row_group in range(0, self.canvas_height, 8):
                         red_byte = 0
                         green_byte = 0
                         blue_byte = 0
                         
+                        # Process each bit in the group
                         for bit in range(8):
                             if row_group + bit < self.canvas_height:
-                                color = frame[row_group + bit][col]
+                                color = frame[row_group + bit][col].upper()
                                 binary = self.reverse_color_map.get(color, '000')
                                 
+                                # Set the appropriate bit if the color component is 1
                                 if binary[2] == '1':  # Red
                                     red_byte |= (1 << (7 - bit))
                                 if binary[1] == '1':  # Green
@@ -774,30 +832,18 @@ class PixelArtEditor:
                                 if binary[0] == '1':  # Blue
                                     blue_byte |= (1 << (7 - bit))
                         
+                        # Add the bytes to their respective arrays
                         red_data.append(red_byte)
                         green_data.append(green_byte)
                         blue_data.append(blue_byte)
-                
-                # Combine all data
-                if is_animation:
-                    for frame_idx in range(len(frames_to_process)):
-                        start_idx = frame_idx * (self.canvas_width * self.canvas_height // 8)
-                        end_idx = start_idx + (self.canvas_width * self.canvas_height // 8)
-                        binary_data.extend(red_data[start_idx:end_idx])
-                    
-                    for frame_idx in range(len(frames_to_process)):
-                        start_idx = frame_idx * (self.canvas_width * self.canvas_height // 8)
-                        end_idx = start_idx + (self.canvas_width * self.canvas_height // 8)
-                        binary_data.extend(green_data[start_idx:end_idx])
-                    
-                    for frame_idx in range(len(frames_to_process)):
-                        start_idx = frame_idx * (self.canvas_width * self.canvas_height // 8)
-                        end_idx = start_idx + (self.canvas_width * self.canvas_height // 8)
-                        binary_data.extend(blue_data[start_idx:end_idx])
-                else:
-                    binary_data.extend(red_data)
-                    binary_data.extend(green_data)
-                    binary_data.extend(blue_data)
+            
+            # Combine all data in the correct order
+            # First all red data for all frames
+            binary_data.extend(red_data)
+            # Then all green data for all frames
+            binary_data.extend(green_data)
+            # Then all blue data for all frames
+            binary_data.extend(blue_data)
         
         return binary_data
 
@@ -822,6 +868,20 @@ class PixelArtEditor:
         # For simplicity, just return None
         return None
 
+    def play_animation(self):
+        # Start or stop animation playback
+        self.is_playing = not self.is_playing
+        if self.is_playing:
+            # Set a timer event that will trigger frame changes
+            # Use the delays value (in milliseconds) for the interval
+            pygame.time.set_timer(pygame.USEREVENT, self.delays)
+            # Update button text to show pause symbol
+            self.play_pause_button.set_text("⏸")
+        else:
+            # Stop the timer
+            pygame.time.set_timer(pygame.USEREVENT, 0)
+            # Update button text to show play symbol
+            self.play_pause_button.set_text("▶")
                         
     def handle_events(self):
         time_delta = self.clock.tick(60) / 1000.0
@@ -849,11 +909,11 @@ class PixelArtEditor:
                 self.status_label.set_position((20, self.screen_height - 40))
                 self.status_label.set_dimensions((self.screen_width - 40, 30))
             
-            # Handle animation timer
+            # Handle animation timer event
             elif event.type == pygame.USEREVENT:
-                if self.is_playing:
+                if self.is_playing and self.current_mode == "animation" and self.total_frames > 1:
                     self.next_frame()
-            
+                
             # Handle mouse events
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button in (1, 3):  # Left or right mouse button
@@ -914,6 +974,8 @@ class PixelArtEditor:
                     self.shift_image_right()
                 elif event.ui_element == self.save_button:
                     self.save_jt_file()
+                elif event.ui_element == self.debug_toggle_button:
+                    self.text_display.visible = not self.text_display.visible
                 elif event.ui_element == self.load_button:
                     # Load file functionality would go here
                     pass
