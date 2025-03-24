@@ -895,12 +895,31 @@ class PixelArtEditor:
             self.update_text_display()
             
     def save_jt_file(self):
-        # Save as JT file format
-        filename = self.filename_input.get_text()
-        if not filename:
-            filename = "image"
+        # Get base filename from the input field
+        base_filename = self.filename_input.get_text()
+        if not base_filename:
+            base_filename = "image"
+        
+        # Create timestamp in YYYYmmDDHHMMSS format
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        
+        # Combine base filename with timestamp
+        filename = f"{base_filename}_{timestamp}"
+        
+        # Make sure it has the .jt extension
         if not filename.endswith(".jt"):
             filename += ".jt"
+        
+        # Create downloads directory if it doesn't exist
+        import os
+        downloads_dir = "downloads"
+        if not os.path.exists(downloads_dir):
+            os.makedirs(downloads_dir)
+            print(f"Created directory: {downloads_dir}")
+        
+        # Full path to the file
+        filepath = os.path.join(downloads_dir, filename)
         
         # Create the data structure based on format and mode
         if self.current_mode == "static":
@@ -932,15 +951,36 @@ class PixelArtEditor:
             }]
         
         try:
-            with open(filename, 'w') as f:
+            with open(filepath, 'w') as f:
                 json.dump(data, f)
             # Show a success message
-            self.status_label.set_text(f"File saved successfully as {filename}")
-            print(f"File saved successfully as {filename}")
+            self.status_label.set_text(f"File saved successfully as {filepath}")
+            print(f"File saved successfully as {filepath}")
         except Exception as e:
             # Show an error message
             self.status_label.set_text(f"Error saving file: {e}")
             print(f"Error saving file: {e}")
+        
+        # Also save a debug image of the current frame
+        try:
+            # Create a surface for the current frame
+            debug_surface = pygame.Surface((self.canvas_width, self.canvas_height))
+            debug_surface.fill((0, 0, 0))  # Fill with black
+            
+            # Draw the current frame
+            current_frame = self.pixel_array_frames[self.current_frame_index]
+            for y in range(self.canvas_height):
+                for x in range(self.canvas_width):
+                    color = current_frame[y][x]
+                    debug_surface.set_at((x, y), pygame.Color(color))
+            
+            # Save the debug image with the same timestamp
+            debug_filename = f"{base_filename}_{timestamp}.png"
+            debug_filepath = os.path.join(downloads_dir, debug_filename)
+            pygame.image.save(debug_surface, debug_filepath)
+            print(f"Debug image saved as {debug_filepath}")
+        except Exception as e:
+            print(f"Error saving debug image: {e}")
 
     def get_binary_data_for_jt(self, is_animation=False, is_v1=False):
         # Convert pixel data to binary format for JT file
