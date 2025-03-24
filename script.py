@@ -487,25 +487,55 @@ class PixelArtEditor:
                         font = pygame.font.Font(None, font_size)
                         print("Using default font")
         
-        # Render the text to a surface
-        text_surface = font.render(text, True, (255, 255, 255), (0, 0, 0))
-        
-        # Calculate position to center the text
-        position = ((self.canvas_width - text_surface.get_width()) // 2, 
-                    (self.canvas_height - text_surface.get_height()) // 2)
-        
-        # Ensure position is not negative
-        position = (max(0, position[0]), max(0, position[1]))
-        
-        print(f"Text dimensions: {text_surface.get_width()}x{text_surface.get_height()}")
-        print(f"Text position: {position}")
-        
         # Create a temporary surface the size of the canvas
         temp_surface = pygame.Surface((self.canvas_width, self.canvas_height))
         temp_surface.fill((0, 0, 0))  # Fill with black
         
-        # Draw the text onto the temporary surface
-        temp_surface.blit(text_surface, position)
+        # Apply letter spacing by rendering each character separately
+        if letter_spacing > 0:
+            # Calculate total width with spacing
+            total_width = 0
+            rendered_chars = []
+            
+            for char in text:
+                char_surface = font.render(char, True, (255, 255, 255), (0, 0, 0))
+                rendered_chars.append(char_surface)
+                total_width += char_surface.get_width() + letter_spacing
+            
+            # Remove the extra spacing after the last character
+            if rendered_chars:
+                total_width -= letter_spacing
+            
+            # Calculate position to center the text
+            x_pos = (self.canvas_width - total_width) // 2
+            y_pos = (self.canvas_height - rendered_chars[0].get_height()) // 2 if rendered_chars else 0
+            
+            # Ensure position is not negative
+            x_pos = max(0, x_pos)
+            y_pos = max(0, y_pos)
+            
+            # Draw each character with spacing
+            for char_surface in rendered_chars:
+                temp_surface.blit(char_surface, (x_pos, y_pos))
+                x_pos += char_surface.get_width() + letter_spacing
+                
+            print(f"Text dimensions with spacing: {total_width}x{rendered_chars[0].get_height() if rendered_chars else 0}")
+        else:
+            # Render the text normally without spacing
+            text_surface = font.render(text, True, (255, 255, 255), (0, 0, 0))
+            
+            # Calculate position to center the text
+            position = ((self.canvas_width - text_surface.get_width()) // 2, 
+                        (self.canvas_height - text_surface.get_height()) // 2)
+            
+            # Ensure position is not negative
+            position = (max(0, position[0]), max(0, position[1]))
+            
+            print(f"Text dimensions: {text_surface.get_width()}x{text_surface.get_height()}")
+            print(f"Text position: {position}")
+            
+            # Draw the text onto the temporary surface
+            temp_surface.blit(text_surface, position)
         
         # Save debug image
         pygame.image.save(temp_surface, "debug_text_render.png")
